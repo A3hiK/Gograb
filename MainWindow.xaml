@@ -631,7 +631,7 @@
                     <Button Style="{StaticResource CircleBtn}" Click="ClearCompleted_Click" Width="22" Height="22" Margin="4,0,0,0" ToolTip="Clear completed">
                         <Path Data="M 2 3 L 10 3 M 3 3 L 3 9 L 9 9 L 9 3 M 4 4.5 L 4 8 M 6 4.5 L 6 8 M 8 4.5 L 8 8" Stroke="{DynamicResource BtnIcon}" StrokeThickness="0.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Fill="Transparent"/>
                     </Button>
-                    <TextBlock Text="Gograb v1.0" FontSize="8" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" Margin="5,0,0,0"/>
+                    <TextBlock Text="Gograb v1.0.2" FontSize="8" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" Margin="5,0,0,0"/>
                 </StackPanel>
 
                 <!-- Dark Mode Toggle -->
