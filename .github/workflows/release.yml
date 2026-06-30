@@ -1,0 +1,88 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build -c Release --no-restore
+
+    - name: Publish self-contained
+      run: dotnet publish -c Release --self-contained -r win-x64 -p:PublishSingleFile=false -o publish
+
+    - name: Download yt-dlp
+      run: |
+        Invoke-WebRequest -Uri "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe" -OutFile "publish/yt-dlp.exe"
+
+    - name: Download ffmpeg
+      run: |
+        Invoke-WebRequest -Uri "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip" -OutFile "ffmpeg.zip"
+        Expand-Archive -Path "ffmpeg.zip" -DestinationPath "ffmpeg-temp" -Force
+        $extractedDir = Get-ChildItem "ffmpeg-temp" -Directory | Select-Object -First 1
+        New-Item -ItemType Directory -Path "publish/ffmpeg/bin" -Force
+        Copy-Item "$($extractedDir.FullName)/bin/ffmpeg.exe" "publish/ffmpeg/bin/"
+        Remove-Item "ffmpeg.zip" -Force
+        Remove-Item "ffmpeg-temp" -Recurse -Force
+
+    - name: Install Inno Setup
+      run: |
+        Invoke-WebRequest -Uri "https://github.com/jrsoftware/issrc/releases/download/is-6_7_3/innosetup-6.7.3.exe" -OutFile "is-setup.exe"
+        Start-Process -FilePath "is-setup.exe" -ArgumentList "/SILENT /NORESTART /SUPPRESSMSGBOXES /DIR=C:\InnoSetup" -Wait
+
+    - name: Get version from tag
+      id: version
+      run: |
+        $tag = "${{ github.ref_name }}"
+        $version = $tag -replace '^v', ''
+        echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+
+    - name: Build installer
+      run: |
+        $content = Get-Content setup.iss -Raw
+        $content = $content -replace 'AppVersion=.*', "AppVersion=${{ steps.version.outputs.VERSION }}"
+        $content = $content -replace 'OutputBaseFilename=.*', "OutputBaseFilename=Gograb-${{ steps.version.outputs.VERSION }}-Setup"
+        $content = $content -replace 'Source: "C:\\Users\\Admin\\Desktop\\EasyDL\\publish\\', 'Source: "publish\'
+        Set-Content setup.iss $content
+        & "C:\InnoSetup\ISCC.exe" setup.iss
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: installer/Gograb-${{ steps.version.outputs.VERSION }}-Setup.exe
+        name: Gograb v${{ steps.version.outputs.VERSION }}
+        body: |
+          ## Gograb v${{ steps.version.outputs.VERSION }}
+          
+          ### What's Included
+          - Gograb.exe (self-contained, no .NET needed)
+          - yt-dlp.exe (YouTube downloader)
+          - ffmpeg.exe (video/audio converter)
+          
+          ### Installation
+          1. Download `Gograb-${{ steps.version.outputs.VERSION }}-Setup.exe`
+          2. Run the installer
+          3. Follow the setup wizard
+          
+          No additional software required!
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
