@@ -62,6 +62,12 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private bool _globalConvertToKeypad = false;
 
+    [ObservableProperty]
+    private bool _hasUpdate = false;
+
+    [ObservableProperty]
+    private string _updateVersion = "";
+
     public ObservableCollection<DownloadItem> AllItems { get; } = new();
     public ICollectionView FilteredView { get; }
 
@@ -85,6 +91,7 @@ public partial class MainViewModel : ObservableObject
         _clipboardTimer.Start();
 
         Task.Run(InitializeDependencies);
+        Task.Run(CheckForUpdate);
     }
 
     private bool FilterItem(object obj)
@@ -100,6 +107,22 @@ public partial class MainViewModel : ObservableObject
             "Complete" => item.Status == "Completed",
             _ => true
         };
+    }
+
+    private async Task CheckForUpdate()
+    {
+        var (hasUpdate, version, _) = await UpdateService.CheckForUpdateAsync();
+        if (hasUpdate)
+        {
+            HasUpdate = true;
+            UpdateVersion = version;
+        }
+    }
+
+    [RelayCommand]
+    private void OpenUpdatePage()
+    {
+        UpdateService.OpenReleasePage();
     }
 
     public void SetFilter(string filter)

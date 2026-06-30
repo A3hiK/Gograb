@@ -25,6 +25,8 @@
             <Setter Property="BorderThickness" Value="0"/>
         </Style>
 
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
+
         <!-- Circle Button - Theme Aware -->
         <Style TargetType="Button" x:Key="CircleBtn">
             <Setter Property="Background" Value="Transparent"/>
@@ -200,10 +202,35 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="52"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="34"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="32"/>
         </Grid.RowDefinitions>
+
+        <!-- ===== UPDATE BANNER ===== -->
+        <Border Grid.Row="1" Background="#1A0876CC" BorderBrush="{DynamicResource Blue}" BorderThickness="0,0,0,1" Padding="10,5" Visibility="{Binding HasUpdate, Converter={StaticResource BoolToVisibility}}">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <TextBlock Text="&#x2191;" FontSize="10" Foreground="{DynamicResource Blue}" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                <TextBlock FontSize="9" Foreground="{DynamicResource Text}" VerticalAlignment="Center">
+                    <Run Text="New version v"/><Run Text="{Binding UpdateVersion, Mode=OneWay}"/><Run Text=" available"/>
+                </TextBlock>
+                <Button Content="Download" Margin="8,0,0,0" Padding="6,2" FontSize="8" Cursor="Hand" Command="{Binding OpenUpdatePageCommand}">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="bd" Background="{DynamicResource Blue}" CornerRadius="3" Padding="6,2">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="bd" Property="Background" Value="#005A9E"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+            </StackPanel>
+        </Border>
 
         <!-- ===== TOP TOOLBAR ===== -->
         <Border Grid.Row="0" Background="{DynamicResource BgToolbar}" BorderBrush="{DynamicResource Border}" BorderThickness="0,0,0,1">
@@ -269,7 +296,7 @@
         </Border>
 
         <!-- ===== STATUS FILTER PILLS ===== -->
-        <Border Grid.Row="1" Background="{DynamicResource BgToolbar}" BorderBrush="{DynamicResource Border}" BorderThickness="0,0,0,1">
+        <Border Grid.Row="2" Background="{DynamicResource BgToolbar}" BorderBrush="{DynamicResource Border}" BorderThickness="0,0,0,1">
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0">
                 <RadioButton x:Name="PillAll" Tag="All" Click="StatusPill_Click" IsChecked="True">
                     <RadioButton.Style>
@@ -395,7 +422,7 @@
         </Border>
 
         <!-- ===== MAIN QUEUE AREA ===== -->
-        <Border Grid.Row="2" Background="{DynamicResource BgPage}" BorderThickness="0">
+        <Border Grid.Row="3" Background="{DynamicResource BgPage}" BorderThickness="0">
             <ScrollViewer VerticalScrollBarVisibility="Auto" BorderThickness="0">
                 <ItemsControl ItemsSource="{Binding FilteredView}">
                     <ItemsControl.ItemTemplate>
@@ -586,7 +613,7 @@
         </Border>
 
         <!-- ===== BOTTOM BAR ===== -->
-        <Border Grid.Row="3" Background="{DynamicResource BgToolbar}" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,0,0">
+        <Border Grid.Row="4" Background="{DynamicResource BgToolbar}" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,0,0">
             <Grid Margin="10,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
